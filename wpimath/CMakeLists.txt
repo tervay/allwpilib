@@ -216,3 +216,30 @@ if(WITH_TESTS)
     target_include_directories(wpimath_test PRIVATE src/test/native/include)
     target_link_libraries(wpimath_test wpimath googletest)
 endif()
+
+add_executable(wasm_main wasm_main.cpp)
+target_link_libraries(wasm_main wpimath)
+
+if(EMSCRIPTEN)
+  if(NOT DEFINED wasm_dest)
+    set(wasm_dest "wasm")
+  endif()
+  # Create the output directory first
+  file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${wasm_dest}")
+
+  # Set the output directory BEFORE setting other properties
+  set_target_properties(wasm_main PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${wasm_dest}"
+  )
+  
+  # Now set the other properties
+  set_target_properties(wasm_main PROPERTIES
+    SUFFIX ".js"
+    # LINK_FLAGS "-s WASM=1 -s EXPORT_ALL=1 -s MODULARIZE=1 -s EXPORT_NAME='WPIMathModule' -s ALLOW_MEMORY_GROWTH=1 -lembind --emit-tsd wasm_main.d.ts --no-entry"
+    LINK_FLAGS "-s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE -s SINGLE_FILE -s EXPORT_ES6 -lembind -s ENVIRONMENT=web --emit-tsd wasm_main.d.ts --no-entry"
+  )
+  
+  # Let's try a different approach for TypeScript definitions
+  # Use a separate custom command to generate the .d.ts file after successful build
+
+endif()
