@@ -17,6 +17,7 @@
 #include "frc/trajectory/TrajectoryGenerator.h"
 #include "frc/trajectory/constraint/DifferentialDriveVoltageConstraint.h"
 #include "frc/controller/SimpleMotorFeedforward.h"
+#include "frc/controller/ElevatorFeedforward.h"
 #include "frc/controller/RamseteController.h"
 #include "frc/controller/PIDController.h"
 #include "frc/filter/LinearFilter.h"
@@ -138,6 +139,78 @@ public:
 
 private:
     PIDController controller;
+};
+
+// ElevatorFeedforward bindings
+class ElevatorFeedforwardWasm {
+public:
+    // Constructor with kS, kG, kV, kA, dt (all in base units)
+    ElevatorFeedforwardWasm(double kS, double kG, double kV, double kA, double dt)
+        : feedforward(
+            units::volt_t(kS),
+            units::volt_t(kG),
+            units::unit_t<frc::ElevatorFeedforward::kv_unit>(kV),
+            units::unit_t<frc::ElevatorFeedforward::ka_unit>(kA),
+            units::second_t(dt)
+        ) {}
+    
+    // Constructor with kS, kG, kV, kA (dt defaults to 0.020)
+    ElevatorFeedforwardWasm(double kS, double kG, double kV, double kA)
+        : ElevatorFeedforwardWasm(kS, kG, kV, kA, 0.020) {}
+    
+    // Constructor with kS, kG, kV (kA defaults to 0, dt defaults to 0.020)
+    ElevatorFeedforwardWasm(double kS, double kG, double kV)
+        : ElevatorFeedforwardWasm(kS, kG, kV, 0.0, 0.020) {}
+
+    // Calculate with single velocity (current velocity)
+    double calculate(double currentVelocity) {
+        return feedforward.Calculate(units::meters_per_second_t(currentVelocity)).to<double>();
+    }
+
+    // Calculate with current and next velocity
+    double calculate(double currentVelocity, double nextVelocity) {
+        return feedforward.Calculate(
+            units::meters_per_second_t(currentVelocity),
+            units::meters_per_second_t(nextVelocity)
+        ).to<double>();
+    }
+
+    // Getters for gains
+    double getKs() const {
+        return feedforward.GetKs().to<double>();
+    }
+
+    double getKg() const {
+        return feedforward.GetKg().to<double>();
+    }
+
+    double getKv() const {
+        return feedforward.GetKv().to<double>();
+    }
+
+    double getKa() const {
+        return feedforward.GetKa().to<double>();
+    }
+
+    // Setters for gains
+    void setKs(double kS) {
+        feedforward.SetKs(units::volt_t(kS));
+    }
+
+    void setKg(double kG) {
+        feedforward.SetKg(units::volt_t(kG));
+    }
+
+    void setKv(double kV) {
+        feedforward.SetKv(units::unit_t<frc::ElevatorFeedforward::kv_unit>(kV));
+    }
+
+    void setKa(double kA) {
+        feedforward.SetKa(units::unit_t<frc::ElevatorFeedforward::ka_unit>(kA));
+    }
+
+private:
+    ElevatorFeedforward feedforward;
 };
 
 // DifferentialDriveKinematics bindings
@@ -316,6 +389,22 @@ EMSCRIPTEN_BINDINGS(wpimath) {
         .function("getPositionError", &PIDControllerWasm::getPositionError)
         .function("getVelocityError", &PIDControllerWasm::getVelocityError)
         .function("atSetpoint", &PIDControllerWasm::atSetpoint);
+
+    // ElevatorFeedforward
+    class_<ElevatorFeedforwardWasm>("ElevatorFeedforward")
+        .constructor<double, double, double, double, double>()
+        .constructor<double, double, double, double>()
+        .constructor<double, double, double>()
+        .function("calculate", static_cast<double(ElevatorFeedforwardWasm::*)(double)>(&ElevatorFeedforwardWasm::calculate))
+        .function("calculate", static_cast<double(ElevatorFeedforwardWasm::*)(double, double)>(&ElevatorFeedforwardWasm::calculate))
+        .function("getKs", &ElevatorFeedforwardWasm::getKs)
+        .function("getKg", &ElevatorFeedforwardWasm::getKg)
+        .function("getKv", &ElevatorFeedforwardWasm::getKv)
+        .function("getKa", &ElevatorFeedforwardWasm::getKa)
+        .function("setKs", &ElevatorFeedforwardWasm::setKs)
+        .function("setKg", &ElevatorFeedforwardWasm::setKg)
+        .function("setKv", &ElevatorFeedforwardWasm::setKv)
+        .function("setKa", &ElevatorFeedforwardWasm::setKa);
 
     // DifferentialDriveKinematics
     class_<DifferentialDriveKinematicsWasm>("DifferentialDriveKinematics")

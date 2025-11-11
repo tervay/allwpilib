@@ -74,6 +74,19 @@ export interface PIDController extends ClassHandle {
   getVelocityError(): number;
 }
 
+export interface ElevatorFeedforward extends ClassHandle {
+  calculate(_0: number): number;
+  calculate(_0: number, _1: number): number;
+  getKs(): number;
+  getKg(): number;
+  getKv(): number;
+  getKa(): number;
+  setKs(_0: number): void;
+  setKg(_0: number): void;
+  setKv(_0: number): void;
+  setKa(_0: number): void;
+}
+
 export interface DifferentialDriveKinematics extends ClassHandle {
   toChassisSpeeds(_0: number, _1: number): any;
   toWheelSpeeds(_0: number, _1: number, _2: number): any;
@@ -103,6 +116,11 @@ interface EmbindModule {
   };
   PIDController: {
     new(_0: number, _1: number, _2: number): PIDController;
+  };
+  ElevatorFeedforward: {
+    new(_0: number, _1: number, _2: number, _3: number, _4: number): ElevatorFeedforward;
+    new(_0: number, _1: number, _2: number, _3: number): ElevatorFeedforward;
+    new(_0: number, _1: number, _2: number): ElevatorFeedforward;
   };
   DifferentialDriveKinematics: {
     new(_0: number): DifferentialDriveKinematics;

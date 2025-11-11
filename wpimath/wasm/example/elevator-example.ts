@@ -13,7 +13,7 @@ import { Elevator } from './Elevator';
 
 // Import auto-generated TypeScript definitions
 import type { MainModule as WpilibcModule } from '../../../wpilibc/wasm/typescript/wpilibc.emscripten';
-import type { WpimathModule } from '../typescript/wpimath';
+import type { MainModule as WpimathModule } from '../typescript/wpimath.emscripten';
 
 // Get paths relative to this file
 const __filename = fileURLToPath(import.meta.url);

@@ -4,7 +4,7 @@
  */
 
 import type { MainModule as WpilibcModule, DCMotor, ElevatorSim } from '../../../wpilibc/wasm/typescript/wpilibc.emscripten';
-import type { WpimathModule } from '../typescript/wpimath';
+import type { MainModule as WpimathModule } from '../typescript/wpimath.emscripten';
 
 // Constants matching the C++ example
 namespace Constants {
@@ -29,58 +29,6 @@ namespace Constants {
   export const kArmEncoderDistPerPulse = 2.0 * Math.PI * kElevatorDrumRadius / 4096.0;
 }
 
-/**
- * ElevatorFeedforward implementation in TypeScript
- * Computes feedforward outputs for an elevator
- */
-class ElevatorFeedforward {
-  private kS: number; // Static gain (volts)
-  private kG: number; // Gravity gain (volts)
-  private kV: number; // Velocity gain (V/(m/s))
-  private kA: number; // Acceleration gain (V/(m/s²))
-  private dt: number; // Period (seconds)
-
-  constructor(kS: number, kG: number, kV: number, kA: number = 0, dt: number = 0.020) {
-    if (kV < 0) {
-      throw new Error(`kV must be a non-negative number, got ${kV}!`);
-    }
-    if (kA < 0) {
-      throw new Error(`kA must be a non-negative number, got ${kA}!`);
-    }
-    if (dt <= 0) {
-      throw new Error(`period must be a positive number, got ${dt}!`);
-    }
-
-    this.kS = kS;
-    this.kG = kG;
-    this.kV = kV;
-    this.kA = kA;
-    this.dt = dt;
-  }
-
-  /**
-   * Calculates the feedforward from the gains and setpoint assuming discrete control.
-   * @param currentVelocity The current velocity setpoint (m/s)
-   * @param nextVelocity The next velocity setpoint (m/s), defaults to currentVelocity
-   * @return The computed feedforward, in volts
-   */
-  calculate(currentVelocity: number, nextVelocity?: number): number {
-    const next = nextVelocity !== undefined ? nextVelocity : currentVelocity;
-
-    // Simplified version for kA = 0 (most common case)
-    if (this.kA < 1e-9) {
-      return this.kS * Math.sign(next) + this.kG + this.kV * next;
-    }
-
-    // Full calculation with acceleration
-    const A = -this.kV / this.kA;
-    const B = 1.0 / this.kA;
-    const A_d = Math.exp(A * this.dt);
-    const B_d = A > -1e-9 ? B * this.dt : (1.0 / A) * (A_d - 1.0) * B;
-    return this.kG + this.kS * Math.sign(currentVelocity) +
-           (1.0 / B_d) * (next - A_d * currentVelocity);
-  }
-}
 
 /**
  * Elevator class that mirrors the C++ example
@@ -95,7 +43,7 @@ export class Elevator {
 
   // Control
   private m_controller: any; // PIDController from wpimath
-  private m_feedforward: ElevatorFeedforward;
+  private m_feedforward: any; // ElevatorFeedforward from wpimath
 
   // Simulated hardware state
   private m_encoderDistance: number = 0; // meters
@@ -140,12 +88,14 @@ export class Elevator {
       Constants.kElevatorKd
     );
 
-    // Create feedforward
-    this.m_feedforward = new ElevatorFeedforward(
+    // Create feedforward using wasm implementation
+    // Constructor supports: (kS, kG, kV), (kS, kG, kV, kA), or (kS, kG, kV, kA, dt)
+    this.m_feedforward = new wpimath.ElevatorFeedforward(
       Constants.kElevatorkS,
       Constants.kElevatorkG,
       Constants.kElevatorkV,
       Constants.kElevatorkA
+      // dt defaults to 0.020 (20ms) if not specified
     );
   }
 
@@ -202,7 +152,7 @@ export class Elevator {
     
     // Calculate feedforward output
     // In the C++ example: m_feedforward.Calculate(m_controller.GetSetpoint().velocity)
-    // Since we don't have the setpoint velocity from PIDController, we'll use a simplified approach
+    // Since we don't have the setpoint velocity from PIDController, we'll use current velocity
     const feedforwardOutput = this.m_feedforward.calculate(currentVelocity);
 
     // Set motor voltage (PID output + feedforward)
@@ -265,6 +215,7 @@ export class Elevator {
     this.m_elevatorSim.delete();
     this.m_elevatorGearbox.delete();
     (this.m_controller as any).delete();
+    (this.m_feedforward as any).delete();
   }
 }
 

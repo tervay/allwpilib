@@ -82,6 +82,8 @@ interface EmbindModule {
   ElevatorSim: {
     new(_0: DCMotor | null, _1: number, _2: number, _3: number, _4: number, _5: number, _6: boolean, _7: number): ElevatorSim;
   };
+  RoboRioSim_setVInVoltage(_0: number): void;
+  RoboRioSim_getVInVoltage(): number;
 }
 
 export type MainModule = WasmModule & typeof RuntimeExports & EmbindModule;

@@ -5,6 +5,7 @@
 
 // Include wpilibc headers
 #include "frc/simulation/ElevatorSim.h"
+#include "frc/simulation/RoboRioSim.h"
 #include "frc/system/plant/DCMotor.h"
 #include "frc/RobotController.h"
 
@@ -127,6 +128,15 @@ private:
     ElevatorSim elevator;
 };
 
+// RoboRioSim wrapper functions for WebAssembly
+void RoboRioSim_SetVInVoltage(double voltageVolts) {
+    RoboRioSim::SetVInVoltage(units::volt_t(voltageVolts));
+}
+
+double RoboRioSim_GetVInVoltage() {
+    return RoboRioSim::GetVInVoltage().to<double>();
+}
+
 // Emscripten bindings
 EMSCRIPTEN_BINDINGS(wpilibc) {
     // DCMotor factory methods - return pointers that can be passed to ElevatorSim
@@ -151,5 +161,9 @@ EMSCRIPTEN_BINDINGS(wpilibc) {
         .function("hasHitUpperLimit", &ElevatorSimWasm::hasHitUpperLimit)
         .function("wouldHitLowerLimit", &ElevatorSimWasm::wouldHitLowerLimit)
         .function("wouldHitUpperLimit", &ElevatorSimWasm::wouldHitUpperLimit);
+
+    // RoboRioSim static methods
+    function("RoboRioSim_setVInVoltage", &RoboRioSim_SetVInVoltage);
+    function("RoboRioSim_getVInVoltage", &RoboRioSim_GetVInVoltage);
 }
 
