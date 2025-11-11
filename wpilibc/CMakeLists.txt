@@ -22,6 +22,14 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/generated/main/native/include>
         $<INSTALL_INTERFACE:${include_dest}/wpilibc>
 )
+# For Emscripten builds, add ntcore headers directly (ntcore isn't built, but headers are needed)
+# Use PRIVATE since these are only needed for compiling wpilibc, not for consumers
+if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    target_include_directories(wpilibc PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/../ntcore/src/main/native/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../ntcore/src/generated/main/native/include
+    )
+endif()
 wpilib_target_warnings(wpilibc)
 
 if(WITH_CSCORE)
@@ -35,7 +43,16 @@ else()
     )
 endif()
 
-target_link_libraries(wpilibc PUBLIC hal ntcore wpimath wpiutil)
+# Conditionally link ntcore - use stub for WebAssembly builds if needed
+if(TARGET ntcore)
+    target_link_libraries(wpilibc PUBLIC hal ntcore wpimath wpiutil)
+elseif(TARGET ntcore_stub)
+    target_link_libraries(wpilibc PUBLIC hal ntcore_stub wpimath wpiutil)
+else()
+    target_link_libraries(wpilibc PUBLIC hal wpimath wpiutil)
+    # Define a macro to disable ntcore-dependent code if needed
+    target_compile_definitions(wpilibc PRIVATE WPILIB_NO_NTCORE)
+endif()
 
 set_property(TARGET wpilibc PROPERTY FOLDER "libraries")
 
@@ -60,4 +77,9 @@ if(WITH_TESTS)
             PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../cameraserver/src/main/native/include
         )
     endif()
+endif()
+
+# Add WebAssembly subdirectory if Emscripten toolchain is being used
+if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    add_subdirectory(wasm)
 endif()

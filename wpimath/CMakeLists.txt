@@ -216,3 +216,8 @@ if(WITH_TESTS)
     target_include_directories(wpimath_test PRIVATE src/test/native/include)
     target_link_libraries(wpimath_test wpimath googletest)
 endif()
+
+# Add WebAssembly subdirectory if Emscripten toolchain is being used
+if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    add_subdirectory(wasm)
+endif()
