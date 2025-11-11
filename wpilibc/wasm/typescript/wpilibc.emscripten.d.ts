@@ -65,25 +65,16 @@ export interface ElevatorSim extends ClassHandle {
   getPosition(): number;
   getVelocity(): number;
   getCurrentDraw(): number;
-  setState(_0: number, _1: number): void;
-  wouldHitLowerLimit(_0: number): boolean;
-  wouldHitUpperLimit(_0: number): boolean;
 }
 
 interface EmbindModule {
   DCMotor: {
     vex775Pro(_0: number): DCMotor | null;
-    cim(_0: number): DCMotor | null;
-    neo(_0: number): DCMotor | null;
-    miniCIM(_0: number): DCMotor | null;
-    bag(_0: number): DCMotor | null;
-    falcon500(_0: number): DCMotor | null;
   };
   ElevatorSim: {
     new(_0: DCMotor | null, _1: number, _2: number, _3: number, _4: number, _5: number, _6: boolean, _7: number): ElevatorSim;
   };
   RoboRioSim_setVInVoltage(_0: number): void;
-  RoboRioSim_getVInVoltage(): number;
 }
 
 export type MainModule = WasmModule & typeof RuntimeExports & EmbindModule;

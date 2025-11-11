@@ -1,7 +1,4 @@
 #include <emscripten/bind.h>
-#include <emscripten/val.h>
-#include <vector>
-#include <memory>
 
 // Include wpilibc headers
 #include "frc/simulation/ElevatorSim.h"
@@ -31,26 +28,6 @@ public:
 
     static DCMotorWasm* vex775Pro(int numMotors) {
         return new DCMotorWasm(DCMotor::Vex775Pro(numMotors));
-    }
-
-    static DCMotorWasm* cim(int numMotors) {
-        return new DCMotorWasm(DCMotor::CIM(numMotors));
-    }
-
-    static DCMotorWasm* neo(int numMotors) {
-        return new DCMotorWasm(DCMotor::NEO(numMotors));
-    }
-
-    static DCMotorWasm* miniCIM(int numMotors) {
-        return new DCMotorWasm(DCMotor::MiniCIM(numMotors));
-    }
-
-    static DCMotorWasm* bag(int numMotors) {
-        return new DCMotorWasm(DCMotor::Bag(numMotors));
-    }
-
-    static DCMotorWasm* falcon500(int numMotors) {
-        return new DCMotorWasm(DCMotor::Falcon500(numMotors));
     }
 
 private:
@@ -101,27 +78,12 @@ public:
         return elevator.GetCurrentDraw().to<double>();
     }
 
-    void setState(double positionMeters, double velocityMetersPerSecond) {
-        elevator.SetState(
-            units::meter_t(positionMeters),
-            units::meters_per_second_t(velocityMetersPerSecond)
-        );
-    }
-
     bool hasHitLowerLimit() const {
         return elevator.HasHitLowerLimit();
     }
 
     bool hasHitUpperLimit() const {
         return elevator.HasHitUpperLimit();
-    }
-
-    bool wouldHitLowerLimit(double elevatorHeightMeters) const {
-        return elevator.WouldHitLowerLimit(units::meter_t(elevatorHeightMeters));
-    }
-
-    bool wouldHitUpperLimit(double elevatorHeightMeters) const {
-        return elevator.WouldHitUpperLimit(units::meter_t(elevatorHeightMeters));
     }
 
 private:
@@ -133,20 +95,11 @@ void RoboRioSim_SetVInVoltage(double voltageVolts) {
     RoboRioSim::SetVInVoltage(units::volt_t(voltageVolts));
 }
 
-double RoboRioSim_GetVInVoltage() {
-    return RoboRioSim::GetVInVoltage().to<double>();
-}
-
 // Emscripten bindings
 EMSCRIPTEN_BINDINGS(wpilibc) {
     // DCMotor factory methods - return pointers that can be passed to ElevatorSim
     class_<DCMotorWasm>("DCMotor")
-        .class_function("vex775Pro", &DCMotorWasm::vex775Pro, allow_raw_pointers())
-        .class_function("cim", &DCMotorWasm::cim, allow_raw_pointers())
-        .class_function("neo", &DCMotorWasm::neo, allow_raw_pointers())
-        .class_function("miniCIM", &DCMotorWasm::miniCIM, allow_raw_pointers())
-        .class_function("bag", &DCMotorWasm::bag, allow_raw_pointers())
-        .class_function("falcon500", &DCMotorWasm::falcon500, allow_raw_pointers());
+        .class_function("vex775Pro", &DCMotorWasm::vex775Pro, allow_raw_pointers());
 
     // ElevatorSim
     class_<ElevatorSimWasm>("ElevatorSim")
@@ -156,14 +109,10 @@ EMSCRIPTEN_BINDINGS(wpilibc) {
         .function("getPosition", &ElevatorSimWasm::getPosition)
         .function("getVelocity", &ElevatorSimWasm::getVelocity)
         .function("getCurrentDraw", &ElevatorSimWasm::getCurrentDraw)
-        .function("setState", &ElevatorSimWasm::setState)
         .function("hasHitLowerLimit", &ElevatorSimWasm::hasHitLowerLimit)
-        .function("hasHitUpperLimit", &ElevatorSimWasm::hasHitUpperLimit)
-        .function("wouldHitLowerLimit", &ElevatorSimWasm::wouldHitLowerLimit)
-        .function("wouldHitUpperLimit", &ElevatorSimWasm::wouldHitUpperLimit);
+        .function("hasHitUpperLimit", &ElevatorSimWasm::hasHitUpperLimit);
 
     // RoboRioSim static methods
     function("RoboRioSim_setVInVoltage", &RoboRioSim_SetVInVoltage);
-    function("RoboRioSim_getVInVoltage", &RoboRioSim_GetVInVoltage);
 }
 

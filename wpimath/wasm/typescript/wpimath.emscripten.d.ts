@@ -54,66 +54,16 @@ export interface ClassHandle {
   isDeleted(): boolean;
   clone(): this;
 }
-export interface MathUtil extends ClassHandle {
-}
-
-export interface Pose2d extends ClassHandle {
-  x: number;
-  y: number;
-  rotation: number;
-  transformBy(_0: Pose2d): Pose2d;
-  distanceTo(_0: Pose2d): number;
-}
-
 export interface PIDController extends ClassHandle {
   reset(): void;
-  atSetpoint(): boolean;
   calculate(_0: number, _1: number): number;
-  setPID(_0: number, _1: number, _2: number): void;
-  getPositionError(): number;
-  getVelocityError(): number;
 }
 
 export interface ElevatorFeedforward extends ClassHandle {
   calculate(_0: number): number;
-  calculate(_0: number, _1: number): number;
-  getKs(): number;
-  getKg(): number;
-  getKv(): number;
-  getKa(): number;
-  setKs(_0: number): void;
-  setKg(_0: number): void;
-  setKv(_0: number): void;
-  setKa(_0: number): void;
-}
-
-export interface DifferentialDriveKinematics extends ClassHandle {
-  toChassisSpeeds(_0: number, _1: number): any;
-  toWheelSpeeds(_0: number, _1: number, _2: number): any;
-}
-
-export interface LinearFilter extends ClassHandle {
-  reset(): void;
-  calculate(_0: number): number;
-}
-
-export interface Trajectory extends ClassHandle {
-  getTotalTime(): number;
-  getState(_0: number): any;
-  getStates(): any;
-}
-
-export interface TrajectoryGenerator extends ClassHandle {
 }
 
 interface EmbindModule {
-  MathUtil: {
-    inputModulus(_0: number, _1: number, _2: number): number;
-    angleModulus(_0: number): number;
-  };
-  Pose2d: {
-    new(_0: number, _1: number, _2: number): Pose2d;
-  };
   PIDController: {
     new(_0: number, _1: number, _2: number): PIDController;
   };
@@ -121,19 +71,6 @@ interface EmbindModule {
     new(_0: number, _1: number, _2: number, _3: number, _4: number): ElevatorFeedforward;
     new(_0: number, _1: number, _2: number, _3: number): ElevatorFeedforward;
     new(_0: number, _1: number, _2: number): ElevatorFeedforward;
-  };
-  DifferentialDriveKinematics: {
-    new(_0: number): DifferentialDriveKinematics;
-  };
-  LinearFilter: {
-    movingAverage(_0: number): LinearFilter | null;
-    singlePoleIIR(_0: number, _1: number): LinearFilter | null;
-  };
-  Trajectory: {
-    new(): Trajectory;
-  };
-  TrajectoryGenerator: {
-    generateTrajectory(_0: any, _1: any, _2: any, _3: any): Trajectory | null;
   };
 }
 
